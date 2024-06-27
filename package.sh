@@ -2,6 +2,8 @@
 set -xe
 version=$(jq -r ".app_version" ctis.json)
 mkdir -p build
-output="build/ctis-$version.tgz"
+timestamp=$(date +%s)
+output="build/ctis-$version-${timestamp}.tgz"
 echo "Output: $output"
-tar --exclude=".*" --exclude="build" -C ../ -czvf "$output" soar-ctis
+name_of_this_dir=$(basename "$(pwd)")
+tar --exclude=".*" --exclude="build" -C ../ -czvf "$output" "$name_of_this_dir"

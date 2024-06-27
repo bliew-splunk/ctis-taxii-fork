@@ -58,7 +58,7 @@ class TestIndividualCEFFieldToSTIXPattern:
             "[network-traffic:dst_ref.type = 'domain-name' AND network-traffic:dst_ref.value = 'example.com']")
 
     @pytest.mark.parametrize("cef_field", ("url", "requestURL"))
-    def test_destination_hostname(self, cef_field):
+    def test_url(self, cef_field):
         compare_stix_pattern_to_string(
             convert_cef_to_stix_observation_pattern(cef_field, 'https://www.abc.com'),
             "[url:value = 'https://www.abc.com']")

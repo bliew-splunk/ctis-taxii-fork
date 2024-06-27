@@ -1,6 +1,6 @@
 {
-  "appid": "56856118-8c28-4327-851e-2caea4e0659e",
-  "name": "CTIS",
+  "appid": "bca05097-59a9-4429-b634-3beb19b83202",
+  "name": "CTIS STIX/TAXII v2.1 Client",
   "description": "Submit threat intelligence (IOCs) to a TAXII v2.1 Server",
   "publisher": "Splunk",
   "contributors": [
@@ -10,9 +10,9 @@
   ],
   "type": "threat intel",
   "main_module": "ctis_connector.py",
-  "app_version": "0.0.17",
-  "utctime_updated": "2024-06-17T00:13:37.000000Z",
-  "package_name": "soar-ctis",
+  "app_version": "0.0.19",
+  "utctime_updated": "2024-06-27T01:54:55Z",
+  "package_name": "ctis-taxii",
   "product_name": "TAXII v2.1 Client / CTIS",
   "product_vendor": "OASIS / ASD",
   "product_version_regex": ".*",
@@ -55,7 +55,7 @@
       "description": "Scheduled submission: tag to filter for indicators to export to CTIS",
       "data_type": "string",
       "required": false,
-      "default" : "ctis_export",
+      "default": "ctis_export",
       "order": 3
     }
   },
@@ -82,6 +82,18 @@
           "required": true,
           "description": "Indicator ID",
           "data_type": "string"
+        },
+        "tlp_rating": {
+          "order": 1,
+          "required": true,
+          "description": "Traffic Light Protocol (TLP) Rating",
+          "data_type": "string",
+          "value_list": [
+            "WHITE",
+            "GREEN",
+            "AMBER",
+            "RED"
+          ]
         }
       },
       "output": [
