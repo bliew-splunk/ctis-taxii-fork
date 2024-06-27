@@ -10,7 +10,7 @@
   ],
   "type": "threat intel",
   "main_module": "ctis_connector.py",
-  "app_version": "0.0.19",
+  "app_version": "0.0.20",
   "utctime_updated": "2024-06-27T01:54:55Z",
   "package_name": "ctis-taxii",
   "product_name": "TAXII v2.1 Client / CTIS",
@@ -85,7 +85,8 @@
         },
         "tlp_rating": {
           "order": 1,
-          "required": true,
+          "required": false,
+          "default" : null,
           "description": "Traffic Light Protocol (TLP) Rating",
           "data_type": "string",
           "value_list": [

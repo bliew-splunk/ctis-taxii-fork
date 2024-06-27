@@ -87,9 +87,21 @@ class TestMultipleCEFFieldToSTIXPattern:
 
 class TestBuildIndicatorSTIXJSON:
 
+    def test_url_with_tlp_red(self):
+        indicator_json = build_indicator_stix("url", "https://www.example.com", tlp_rating="RED")
+        assert indicator_json["id"].startswith("indicator--")
+        assert indicator_json["type"] == "indicator"
+        assert indicator_json["pattern"] == "[url:value = 'https://www.example.com']"
+        assert indicator_json["pattern_type"] == "stix"
+
+        # Static TLP Marking Definition ID expected
+        # See: https://docs.oasis-open.org/cti/stix/v2.1/os/stix-v2.1-os.html#_yd3ar14ekwrs
+        assert indicator_json["object_marking_refs"] == ["marking-definition--5e57c739-391a-4eb3-b6be-7d15ca92d5ed"]
+
     def test_ipv4(self):
         indicator_json = build_indicator_stix("ip", "1.2.3.4")
         assert indicator_json["id"].startswith("indicator--")
         assert indicator_json["type"] == "indicator"
         assert indicator_json["pattern"] == "[ipv4-addr:value = '1.2.3.4']"
         assert indicator_json["pattern_type"] == "stix"
+        assert "object_marking_refs" not in indicator_json

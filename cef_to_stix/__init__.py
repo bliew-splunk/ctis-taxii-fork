@@ -4,7 +4,7 @@ from typing import List, Union, Type
 from stix2 import Indicator, ObservationExpression, \
     OrBooleanExpression, ParentheticalExpression
 from stix2.patterns import _PatternExpression
-
+from stix2 import TLP_WHITE, TLP_GREEN, TLP_AMBER, TLP_RED
 from cef_to_stix.hostname import SourceHostnameConverter, DestinationHostnameConverter, HostnameConverter
 from cef_to_stix.ip_address import DestinationIPv4Converter, SourceIPv4Converter, IPv4Converter
 from cef_to_stix.abstract_cef_converter import AbstractCEFConverter
@@ -32,15 +32,29 @@ TODO: Implement most common CEF fields
 - Email
 
 """
+TLP_RATING_TO_MARKING_DEFINITION = {
+    "WHITE": TLP_WHITE,
+    "GREEN": TLP_GREEN,
+    "AMBER": TLP_AMBER,
+    "RED": TLP_RED
+}
+TLP_RATINGS = list(TLP_RATING_TO_MARKING_DEFINITION.keys())
 
 
-def build_indicator_stix(cef_field_name_or_list: Union[str, List], cef_field_value: str) -> dict:
+def build_indicator_stix(cef_field_name_or_list: Union[str, List], cef_field_value: str,
+                         tlp_rating: str = None) -> dict:
     pattern = convert_cef_to_stix_observation_pattern(cef_field_name_or_list, cef_field_value)
 
-    # TODO: add more fields to the indicator
-    # https://stix2.readthedocs.io/en/latest/api/stix2.v21.html#stix2.v21.Indicator
+    if tlp_rating is not None and tlp_rating not in TLP_RATING_TO_MARKING_DEFINITION:
+        raise ValueError(f"Invalid TLP rating: {tlp_rating}. Must be one of {TLP_RATINGS}")
+
+    indicator_kwargs = {}
+    if tlp_rating is not None:
+        indicator_kwargs["object_marking_refs"] = TLP_RATING_TO_MARKING_DEFINITION[tlp_rating]
+
     indicator = Indicator(pattern=pattern,
-                          pattern_type="stix")
+                          pattern_type="stix",
+                          **indicator_kwargs)
     indicator_json = str(indicator)
     return json.loads(indicator_json)
 
