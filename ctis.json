@@ -1,0 +1,164 @@
+{
+  "appid": "56856118-8c28-4327-851e-2caea4e0659e",
+  "name": "CTIS",
+  "description": "Submit threat intelligence (IOCs) to a TAXII v2.1 Server",
+  "publisher": "Splunk",
+  "contributors": [
+    {
+      "name": "Ben Liew"
+    }
+  ],
+  "type": "threat intel",
+  "main_module": "ctis_connector.py",
+  "app_version": "0.0.17",
+  "utctime_updated": "2024-06-17T00:13:37.000000Z",
+  "package_name": "soar-ctis",
+  "product_name": "TAXII v2.1 Client / CTIS",
+  "product_vendor": "OASIS / ASD",
+  "product_version_regex": ".*",
+  "min_phantom_version": "5.4.0",
+  "fips_compliant": false,
+  "python_version": "3",
+  "latest_tested_versions": [
+    "TAXII v2.1"
+  ],
+  "logo": "logo_splunk.svg",
+  "logo_dark": "logo_splunk_dark.svg",
+  "license": "Copyright (c) 2016-2024 Splunk Inc.",
+  "pip_dependencies": {
+    "pypi": [
+      {
+        "module": "taxii2-client>=2.3.0"
+      },
+      {
+        "module": "stix2>=3.0.1"
+      }
+    ]
+  },
+  "configuration": {
+    "base_url": {
+      "description": "Base URL of the TAXII REST Server",
+      "order": 0,
+      "data_type": "string"
+    },
+    "username": {
+      "description": "Username",
+      "order": 1,
+      "data_type": "string"
+    },
+    "password": {
+      "description": "Password",
+      "order": 2,
+      "data_type": "password"
+    },
+    "export_tag": {
+      "description": "Scheduled submission: tag to filter for indicators to export to CTIS",
+      "data_type": "string",
+      "required": false,
+      "default" : "ctis_export",
+      "order": 3
+    }
+  },
+  "actions": [
+    {
+      "action": "test connectivity",
+      "description": "Validate the asset configuration for connectivity",
+      "type": "test",
+      "identifier": "test_connectivity",
+      "read_only": true,
+      "parameters": {},
+      "output": [],
+      "versions": "EQ(*)"
+    },
+    {
+      "action": "generate indicator stix json",
+      "description": "Given an artifact and specific CEF field, generate a STIX 2.1 Indicator JSON object",
+      "type": "generic",
+      "identifier": "generate_indicator_stix_json",
+      "read_only": true,
+      "parameters": {
+        "indicator_id": {
+          "order": 0,
+          "required": true,
+          "description": "Indicator ID",
+          "data_type": "string"
+        }
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.json",
+          "data_type": "string"
+        }
+      ],
+      "versions": "EQ(*)"
+    },
+    {
+      "action": "add objects to collection",
+      "description": "Add objects to a collection",
+      "type": "generic",
+      "identifier": "add_objects_to_collection",
+      "read_only": false,
+      "parameters": {
+        "collection_id": {
+          "order": 0,
+          "required": true,
+          "description": "Collection ID",
+          "data_type": "string"
+        },
+        "objects": {
+          "order": 1,
+          "required": true,
+          "description": "JSON encoded Array of STIX 2.1 Objects",
+          "data_type": "string"
+        }
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.response.id",
+          "data_type": "string"
+        },
+        {
+          "data_path": "action_result.data.*.response.status",
+          "data_type": "string"
+        }
+      ],
+      "versions": "EQ(*)"
+    },
+    {
+      "action": "on poll",
+      "identifier": "on_poll",
+      "description": "Batch submission of IOCs",
+      "type": "ingest",
+      "read_only": false,
+      "parameters": {
+        "start_time": {
+          "description": "Parameter Ignored in this app",
+          "data_type": "numeric",
+          "order": 0
+        },
+        "end_time": {
+          "description": "Parameter Ignored in this app",
+          "data_type": "numeric",
+          "order": 1
+        },
+        "container_id": {
+          "description": "Parameter Ignored in this app",
+          "data_type": "numeric",
+          "order": 2
+        },
+        "container_count": {
+          "description": "Parameter Ignored in this app",
+          "data_type": "numeric",
+          "order": 3
+        },
+        "artifact_count": {
+          "description": "Parameter Ignored in this app",
+          "data_type": "numeric",
+          "order": 4
+        }
+      },
+      "output": [],
+      "versions": "EQ(*)"
+    }
+  ]
+}
