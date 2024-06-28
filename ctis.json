@@ -10,7 +10,7 @@
   ],
   "type": "threat intel",
   "main_module": "ctis_connector.py",
-  "app_version": "0.0.20",
+  "app_version": "0.0.22",
   "utctime_updated": "2024-06-27T01:54:55Z",
   "package_name": "ctis-taxii",
   "product_name": "TAXII v2.1 Client / CTIS",
@@ -95,6 +95,28 @@
             "AMBER",
             "RED"
           ]
+        }
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.json",
+          "data_type": "string"
+        }
+      ],
+      "versions": "EQ(*)"
+    },
+    {
+      "action": "add tlp marking definitions",
+      "description": "For the given array of objects, append the required TLP marking definitions",
+      "type": "generic",
+      "identifier": "add_tlp_marking_definitions",
+      "read_only": false,
+      "parameters": {
+        "objects": {
+          "order": 0,
+          "required": true,
+          "description": "JSON encoded Array of STIX 2.1 Objects",
+          "data_type": "string"
         }
       },
       "output": [

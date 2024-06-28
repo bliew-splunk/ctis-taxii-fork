@@ -19,6 +19,7 @@ from phantom.utils import config as phconfig
 
 import cef_to_stix
 from taxii_client import TAXIIClient
+from tlp_marking import generate_tlp_marking_definitions
 
 assert REST_BASE_URL.endswith("/")
 
@@ -62,15 +63,17 @@ class CTISConnector(BaseConnector):
         self.save_progress("Test Connectivity Passed")
         return action_result.set_status(phantom.APP_SUCCESS)
 
-    def _handle_add_objects_to_collection(self, action_result, param):
-        collection_id = param.get('collection_id')
-        objects_json_str = param.get('objects')
-        self.save_progress(f"Adding objects to collection {collection_id}")
-        self.save_progress(f"collection_id: {collection_id}, objects: {objects_json_str}")
-
+    @staticmethod
+    def deserialize_objects_param(param: dict, key_name: str = "objects") -> list:
+        objects_json_str = param[key_name]
         objects_list = json.loads(objects_json_str)
         assert type(objects_list) == list
-        self.save_progress(f"objects deserialized: {objects_list}")
+        return objects_list
+
+    def _handle_add_objects_to_collection(self, action_result, param):
+        collection_id = param['collection_id']
+        objects_list = self.deserialize_objects_param(param=param)
+        self.save_progress(f"Adding objects {objects_list} to collection {collection_id}")
         resp = self.client.add_objects_to_collection(collection_id, objects_list)
         self.save_progress(f"Response: {resp}")
 
@@ -99,6 +102,16 @@ class CTISConnector(BaseConnector):
         action_result.add_data({"json": json.dumps(stix_dict)})
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _handle_add_tlp_marking_definitions(self, action_result, param):
+        self.save_progress(f"{self._handle_add_tlp_marking_definitions.__name__}: param={param}")
+        objects_list = self.deserialize_objects_param(param=param)
+        tlp_objects = generate_tlp_marking_definitions(objects=objects_list)
+        self.save_progress(f"Generated TLP Marking Definitions: {tlp_objects}")
+        result = objects_list + tlp_objects
+        self.save_progress(f"Result: {result}")
+        action_result.add_data({"json": json.dumps(result)})
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def _handle_on_poll(self, action_result, param):
         self.save_progress(f"ON POLL: export_tag={self.export_tag}")
         self.save_progress(f"ON POLL: {param}")
@@ -114,6 +127,7 @@ class CTISConnector(BaseConnector):
             'test_connectivity': self._handle_test_connectivity,
             'add_objects_to_collection': self._handle_add_objects_to_collection,
             'generate_indicator_stix_json': self._handle_generate_indicator_stix_json,
+            'add_tlp_marking_definitions': self._handle_add_tlp_marking_definitions,
             'on_poll': self._handle_on_poll
         }
         action_result = self.add_action_result(ActionResult(dict(param)))
