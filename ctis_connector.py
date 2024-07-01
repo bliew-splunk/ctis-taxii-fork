@@ -73,9 +73,10 @@ class CTISConnector(BaseConnector):
 
     def _handle_add_objects_to_collection(self, action_result, param):
         collection_id = param['collection_id']
+        bundle_id = param.get('bundle_id')
         objects_list = self.deserialize_objects_param(param=param)
-        self.save_progress(f"Adding objects {objects_list} to collection {collection_id}")
-        resp = self.client.add_objects_to_collection(collection_id, objects_list)
+        self.save_progress(f"Adding objects to collection param={param}")
+        resp = self.client.add_objects_to_collection(collection_id, objects_list, bundle_id=bundle_id)
         self.save_progress(f"Response: {resp}")
 
         action_result.add_data({"response": resp})
