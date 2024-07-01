@@ -80,7 +80,21 @@ class CTISConnector(BaseConnector):
         self.save_progress(f"Response: {resp}")
 
         action_result.add_data({"response": resp})
+        # self.write_to_container(data={"objects": objects_list})
         return action_result.set_status(phantom.APP_SUCCESS)
+
+    def write_to_container(self, data: dict):
+        container = {
+            "name": "CTIS Export Record",
+            "label": "ctis-exported",
+            "ingest_app_id": self.get_app_id(),
+            "asset_id": self.get_asset_id(),
+            "data": data,
+            "severity": "low",
+        }
+        self.save_progress(f"Writing container: {container}")
+        resp = self.save_container(container)
+        self.save_progress(f"Saved container: {resp}")
 
     # TODO: Consider another action which doesn't rely on an existing Indicator
     #   so user can give any cef_field_names and cef_value
