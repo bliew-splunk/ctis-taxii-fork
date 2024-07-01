@@ -17,6 +17,7 @@ from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector, REST_BASE_URL
 from phantom.utils import config as phconfig
 
+from stix2 import Identity
 import cef_to_stix
 from taxii_client import TAXIIClient
 from tlp_marking import generate_tlp_marking_definitions
@@ -112,6 +113,15 @@ class CTISConnector(BaseConnector):
         action_result.add_data({"json": json.dumps(result)})
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _handle_generate_identity_stix_json(self, action_result, param):
+        self.save_progress(f"Generating Identity STIX JSON with param={param}")
+        identity_id = param['id']
+        identity_name = param['name']
+        identity_class = param['identity_class']
+        identity_obj = Identity(id=identity_id, name=identity_name, identity_class=identity_class)
+        action_result.add_data({"json": identity_obj.serialize()})
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def _handle_on_poll(self, action_result, param):
         self.save_progress(f"ON POLL: export_tag={self.export_tag}")
         self.save_progress(f"ON POLL: {param}")
@@ -128,7 +138,8 @@ class CTISConnector(BaseConnector):
             'add_objects_to_collection': self._handle_add_objects_to_collection,
             'generate_indicator_stix_json': self._handle_generate_indicator_stix_json,
             'add_tlp_marking_definitions': self._handle_add_tlp_marking_definitions,
-            'on_poll': self._handle_on_poll
+            'on_poll': self._handle_on_poll,
+            'generate_identity_stix_json': self._handle_generate_identity_stix_json,
         }
         action_result = self.add_action_result(ActionResult(dict(param)))
         if action_id not in actions:

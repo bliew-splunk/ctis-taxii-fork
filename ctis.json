@@ -10,7 +10,7 @@
   ],
   "type": "threat intel",
   "main_module": "ctis_connector.py",
-  "app_version": "0.0.22",
+  "app_version": "0.0.23",
   "utctime_updated": "2024-06-27T01:54:55Z",
   "package_name": "ctis-taxii",
   "product_name": "TAXII v2.1 Client / CTIS",
@@ -72,7 +72,7 @@
     },
     {
       "action": "generate indicator stix json",
-      "description": "Given an artifact and specific CEF field, generate a STIX 2.1 Indicator JSON object",
+      "description": "Given a SOAR indicator ID, generate a STIX 2.1 Indicator JSON object",
       "type": "generic",
       "identifier": "generate_indicator_stix_json",
       "read_only": true,
@@ -86,7 +86,7 @@
         "tlp_rating": {
           "order": 1,
           "required": false,
-          "default" : null,
+          "default": null,
           "description": "Traffic Light Protocol (TLP) Rating",
           "data_type": "string",
           "value_list": [
@@ -95,6 +95,42 @@
             "AMBER",
             "RED"
           ]
+        }
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.json",
+          "data_type": "string"
+        }
+      ],
+      "versions": "EQ(*)"
+    },
+    {
+      "action": "generate identity stix json",
+      "description": "Generate Identity STIX json object",
+      "type": "generic",
+      "identifier": "generate_identity_stix_json",
+      "read_only": true,
+      "parameters": {
+        "id": {
+          "order": 0,
+          "required": true,
+          "description": "Identity ID",
+          "data_type": "string"
+        },
+        "identity_class": {
+          "order": 1,
+          "required": true,
+          "default": "organization",
+          "description": "Identity Class",
+          "data_type": "string"
+        },
+        "name": {
+          "order": 2,
+          "required": true,
+          "default": "CTIS",
+          "description": "Name",
+          "data_type": "string"
         }
       },
       "output": [
