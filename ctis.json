@@ -10,7 +10,7 @@
   ],
   "type": "threat intel",
   "main_module": "ctis_connector.py",
-  "app_version": "0.0.24",
+  "app_version": "0.0.25",
   "utctime_updated": "2024-06-27T01:54:55Z",
   "package_name": "ctis-taxii",
   "product_name": "TAXII v2.1 Client / CTIS",
@@ -95,6 +95,12 @@
             "AMBER",
             "RED"
           ]
+        },
+        "created_by_ref": {
+          "order": 2,
+          "required": false,
+          "description": "The Identity ID of the creator of the Indicator",
+          "data_type": "string"
         }
       },
       "output": [

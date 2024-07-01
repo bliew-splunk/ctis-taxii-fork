@@ -87,6 +87,7 @@ class CTISConnector(BaseConnector):
     def _handle_generate_indicator_stix_json(self, action_result, param):
         indicator_id = param['indicator_id']
         tlp_rating = param.get('tlp_rating')  # Optional for now
+        identity_id = param.get('created_by_ref')
         self.save_progress(f"Generating STIX JSON for {param}")
         indicator = self.get_indicator(indicator_id=indicator_id)
         cef_fields = indicator.get("_special_fields")
@@ -99,7 +100,8 @@ class CTISConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, "Indicator does not have any CEF fields")
         assert type(cef_fields) == list
 
-        stix_dict = cef_to_stix.build_indicator_stix(cef_fields, cef_value, tlp_rating=tlp_rating)
+        stix_dict = cef_to_stix.build_indicator_stix(cef_fields, cef_value, tlp_rating=tlp_rating,
+                                                     created_by_ref=identity_id)
         self.save_progress(f"STIX JSON: {stix_dict}")
         action_result.add_data({"json": json.dumps(stix_dict)})
         return action_result.set_status(phantom.APP_SUCCESS)
