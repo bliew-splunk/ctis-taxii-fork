@@ -122,7 +122,11 @@ class CTISConnector(BaseConnector):
         stix_dict = cef_to_stix.build_indicator_stix(cef_fields, cef_value, tlp_rating=tlp_rating,
                                                      created_by_ref=identity_id, **optional_params_dict)
         self.save_progress(f"STIX JSON: {stix_dict}")
-        action_result.add_data({"json": json.dumps(stix_dict)})
+        action_result.add_data({
+            # TODO: test output STIX ID from action
+            "stix_id": stix_dict["id"],
+            "json": json.dumps(stix_dict)
+        })
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_add_tlp_marking_definitions(self, action_result, param):
@@ -144,6 +148,34 @@ class CTISConnector(BaseConnector):
         action_result.add_data({"json": identity_obj.serialize()})
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _handle_create_stix_bundle_container(self, action_result, param):
+        self.save_progress(f"Generating Identity STIX JSON with param={param}")
+        identity_id = param['identity_id']
+        identity_name = param['identity_name']
+        identity_class = param['identity_class']
+        identity_obj = json.loads(
+            Identity(id=identity_id, name=identity_name, identity_class=identity_class).serialize())
+        bundle = self.client.create_bundle_envelope(objects=[])
+        bundle_id = bundle["id"]
+        container_data = {
+            "bundle_id": bundle_id,
+            "identity": identity_obj
+        }
+        container = {
+            "name": f"STIX bundle {bundle_id}",
+            "label": "ctis-bundle",
+            "tags": [bundle_id],
+            "ingest_app_id": self.get_app_id(),
+            "asset_id": self.get_asset_id(),
+            "data": container_data,
+            "severity": "low",
+        }
+        self.save_progress(f"Writing container: {container}")
+        save_status, save_container_message, _ = self.save_container(container)
+        if not save_status:
+            return action_result.set_status(phantom.APP_ERROR, f"Failed to save container: {save_container_message}")
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def _handle_on_poll(self, action_result, param):
         self.save_progress(f"ON POLL: export_tag={self.export_tag}")
         self.save_progress(f"ON POLL: {param}")
@@ -162,6 +194,7 @@ class CTISConnector(BaseConnector):
             'add_tlp_marking_definitions': self._handle_add_tlp_marking_definitions,
             'on_poll': self._handle_on_poll,
             'generate_identity_stix_json': self._handle_generate_identity_stix_json,
+            'create_stix_bundle_container': self._handle_create_stix_bundle_container,
         }
         action_result = self.add_action_result(ActionResult(dict(param)))
         if action_id not in actions:

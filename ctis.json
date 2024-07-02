@@ -10,7 +10,7 @@
   ],
   "type": "threat intel",
   "main_module": "ctis_connector.py",
-  "app_version": "0.0.27",
+  "app_version": "0.0.28",
   "utctime_updated": "2024-06-27T01:54:55Z",
   "package_name": "ctis-taxii",
   "product_name": "TAXII v2.1 Client / CTIS",
@@ -80,7 +80,7 @@
         "indicator_id": {
           "order": 0,
           "required": true,
-          "description": "Indicator ID",
+          "description": "SOAR Indicator ID",
           "data_type": "string"
         },
         "tlp_rating": {
@@ -119,6 +119,46 @@
           "required": false,
           "default": "en",
           "description": "Description of the Indicator",
+          "data_type": "string"
+        }
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.json",
+          "data_type": "string"
+        },
+        {
+          "data_path": "action_result.data.*.stix_id",
+          "data_type": "string"
+        }
+      ],
+      "versions": "EQ(*)"
+    },
+    {
+      "action": "create stix bundle",
+      "description": "Create empty STIX bundle container",
+      "type": "generic",
+      "identifier": "create_stix_bundle_container",
+      "read_only": false,
+      "parameters": {
+        "identity_id": {
+          "order": 0,
+          "required": true,
+          "description": "Identity ID",
+          "data_type": "string"
+        },
+        "identity_class": {
+          "order": 1,
+          "required": true,
+          "default": "organization",
+          "description": "Identity Class",
+          "data_type": "string"
+        },
+        "identity_name": {
+          "order": 2,
+          "required": true,
+          "default": "CTIS",
+          "description": "Name",
           "data_type": "string"
         }
       },
