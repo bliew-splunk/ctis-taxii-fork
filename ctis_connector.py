@@ -181,6 +181,15 @@ class CTISConnector(BaseConnector):
         })
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _handle_get_stix_bundle(self, action_result, param):
+        bundle_id = param['bundle_id']
+        self.save_progress(f"Getting STIX Bundle with ID: {bundle_id}")
+        container = self.get_container_by_tag(bundle_id)
+        bundle_data = container["data"]
+        # TODO: perform transformation into envelope format
+        action_result.add_data({"json": json.dumps(bundle_data)})
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def _handle_on_poll(self, action_result, param):
         self.save_progress(f"ON POLL: export_tag={self.export_tag}")
         self.save_progress(f"ON POLL: {param}")
@@ -200,6 +209,7 @@ class CTISConnector(BaseConnector):
             'on_poll': self._handle_on_poll,
             'generate_identity_stix_json': self._handle_generate_identity_stix_json,
             'create_stix_bundle_container': self._handle_create_stix_bundle_container,
+            'get_stix_bundle': self._handle_get_stix_bundle,
         }
         action_result = self.add_action_result(ActionResult(dict(param)))
         if action_id not in actions:
@@ -224,6 +234,30 @@ class CTISConnector(BaseConnector):
         resp_json = response.json()
         assert type(resp_json) == dict
         return resp_json
+
+    def get_container_by_id(self, container_id: int) -> dict:
+        endpoint = urljoin(REST_BASE_URL, f"container/{container_id}")
+        self.save_progress(f"Getting container: {container_id} from {endpoint}")
+        response = requests.get(endpoint, verify=phconfig.platform_strict_tls)
+        response.raise_for_status()
+        return response.json()
+
+    def get_container_by_tag(self, tag: str) -> dict:
+        # GET /rest/container?_filter_tags__contains=%22bundle--5cb46801-3ff2-4c11-96c2-450b907dcd95%22
+        endpoint = urljoin(REST_BASE_URL, f"container")
+        tag = f'"{tag}"'  # enclose in double quotes
+        self.save_progress(f"Querying for container with tag={tag} from {endpoint}")
+        response = requests.get(endpoint, params={"_filter_tags__contains": tag}, verify=phconfig.platform_strict_tls)
+        response.raise_for_status()
+        resp_json = response.json()
+        data = resp_json["data"]
+        assert type(data) == list
+        if len(data) == 0:
+            raise LookupError(f"Container with tag {tag} not found")
+        if len(data) > 1:
+            raise ValueError(f"Multiple containers with tag {tag} found")
+        container_id = data[0]["id"]
+        return self.get_container_by_id(container_id)
 
     def get_artifact(self, container_id, artifact_id) -> dict:
         endpoint = urljoin(REST_BASE_URL, f"container/{container_id}/artifacts")

@@ -10,7 +10,7 @@
   ],
   "type": "threat intel",
   "main_module": "ctis_connector.py",
-  "app_version": "0.0.29",
+  "app_version": "0.0.30",
   "utctime_updated": "2024-06-27T01:54:55Z",
   "package_name": "ctis-taxii",
   "product_name": "TAXII v2.1 Client / CTIS",
@@ -132,6 +132,28 @@
         },
         {
           "data_path": "action_result.data.*.stix_id",
+          "data_type": "string"
+        }
+      ],
+      "versions": "EQ(*)"
+    },
+    {
+      "action": "get stix bundle",
+      "description": "Get STIX bundle JSON by bundle ID",
+      "type": "generic",
+      "identifier": "get_stix_bundle",
+      "read_only": true,
+      "parameters": {
+        "bundle_id": {
+          "order": 0,
+          "required": true,
+          "description": "Bundle ID",
+          "data_type": "string"
+        }
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.json",
           "data_type": "string"
         }
       ],
