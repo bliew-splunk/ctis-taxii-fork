@@ -43,17 +43,15 @@ TLP_RATINGS = list(TLP_RATING_TO_MARKING_DEFINITION.keys())
 
 def build_indicator_stix(cef_field_name_or_list: Union[str, List], cef_field_value: str,
                          tlp_rating: str = None,
-                         created_by_ref: str = None) -> dict:
+                         **kwargs) -> dict:
     pattern = convert_cef_to_stix_observation_pattern(cef_field_name_or_list, cef_field_value)
 
     if tlp_rating is not None and tlp_rating not in TLP_RATING_TO_MARKING_DEFINITION:
         raise ValueError(f"Invalid TLP rating: {tlp_rating}. Must be one of {TLP_RATINGS}")
 
-    indicator_kwargs = {}
+    indicator_kwargs = kwargs
     if tlp_rating is not None:
         indicator_kwargs["object_marking_refs"] = TLP_RATING_TO_MARKING_DEFINITION[tlp_rating]
-    if created_by_ref is not None:
-        indicator_kwargs["created_by_ref"] = created_by_ref
 
     indicator = Indicator(pattern=pattern,
                           pattern_type="stix",

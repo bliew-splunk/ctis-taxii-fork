@@ -100,10 +100,14 @@ class TestBuildIndicatorSTIXJSON:
 
     def test_ipv4(self):
         identity = "identity--f431f809-377b-45e0-aa1c-6a4751cae5ff"
-        indicator_json = build_indicator_stix("ip", "1.2.3.4", created_by_ref=identity)
+        indicator_json = build_indicator_stix("ip", "1.2.3.4", created_by_ref=identity, description="Malicious IP",
+                                              lang="en", confidence=50)
         assert indicator_json["id"].startswith("indicator--")
         assert indicator_json["type"] == "indicator"
         assert indicator_json["pattern"] == "[ipv4-addr:value = '1.2.3.4']"
         assert indicator_json["pattern_type"] == "stix"
         assert indicator_json["created_by_ref"] == identity
+        assert indicator_json["description"] == "Malicious IP"
+        assert indicator_json["lang"] == "en"
+        assert indicator_json["confidence"] == 50
         assert "object_marking_refs" not in indicator_json
