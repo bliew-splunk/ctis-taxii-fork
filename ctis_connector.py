@@ -171,9 +171,14 @@ class CTISConnector(BaseConnector):
             "severity": "low",
         }
         self.save_progress(f"Writing container: {container}")
-        save_status, save_container_message, _ = self.save_container(container)
+        save_status, save_container_message, container_id = self.save_container(container)
         if not save_status:
             return action_result.set_status(phantom.APP_ERROR, f"Failed to save container: {save_container_message}")
+
+        action_result.add_data({
+            "container_id": container_id,
+            "bundle_id": bundle_id
+        })
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_on_poll(self, action_result, param):
