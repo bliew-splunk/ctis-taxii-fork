@@ -73,6 +73,11 @@ class CTISConnector(BaseConnector):
         assert type(objects_list) == list
         return objects_list
 
+    def _handle_submit_bundle_to_taxii(self, action_result, param):
+        collection_id = param['collection_id']
+        bundle_id = param['bundle_id']
+        pass
+
     def _handle_add_objects_to_collection(self, action_result, param):
         collection_id = param['collection_id']
         bundle_id = param.get('bundle_id')
@@ -112,11 +117,11 @@ class CTISConnector(BaseConnector):
         optional_params = ('description', 'lang', 'confidence')
         optional_params_dict = {k: param[k] for k in optional_params if k in param}
 
-        container_id, container = self.get_container_by_tag(bundle_id)
-        bundle: STIXBundleContainer = STIXBundleContainer.from_dict(container["data"])
+        container_id, bundle = self.get_container_bundle(bundle_id=bundle_id)
         self.save_progress(f"Loaded Bundle: {bundle}")
 
         self.save_progress(f"Generating STIX JSON for {param}")
+        # TODO: extract this to a function: the validation logic
         indicator = self.get_indicator(indicator_id=indicator_id)
         cef_fields = indicator.get("_special_fields")
         cef_value = indicator.get("value")
@@ -160,8 +165,7 @@ class CTISConnector(BaseConnector):
         identity_class = param['identity_class']
         identity_obj = Identity(id=identity_id, name=identity_name, identity_class=identity_class)
         # TODO: refactor this pattern of getting container by tag & updating it
-        container_id, container = self.get_container_by_tag(bundle_id)
-        bundle: STIXBundleContainer = STIXBundleContainer.from_dict(container["data"])
+        container_id, bundle = self.get_container_bundle(bundle_id=bundle_id)
         bundle.add_identity(identity=identity_obj)
         self.update_container_data(container_id, bundle.to_dict())
         return action_result.set_status(phantom.APP_SUCCESS)
@@ -192,9 +196,8 @@ class CTISConnector(BaseConnector):
     def _handle_get_stix_bundle(self, action_result, param):
         bundle_id = param['bundle_id']
         self.save_progress(f"Getting STIX Bundle with ID: {bundle_id}")
-        _, container = self.get_container_by_tag(bundle_id)
-        bundle: STIXBundleContainer = STIXBundleContainer.from_dict(container["data"])
-        self.save_progress(f"Loaded Bundle container: {bundle}")
+        container_id, bundle = self.get_container_bundle(bundle_id=bundle_id)
+        self.save_progress(f"Loaded Bundle from container_id={container_id}: {bundle}")
         bundle_dict = bundle.to_canonical_bundle_dict()
         self.save_progress(f"Converted to STIX Bundle: {bundle_dict}")
         action_result.add_data(bundle_dict)
@@ -220,6 +223,7 @@ class CTISConnector(BaseConnector):
             'add_identity_to_stix_bundle_container': self._handle_add_identity_to_stix_bundle_container,
             'create_stix_bundle_container': self._handle_create_stix_bundle_container,
             'get_stix_bundle': self._handle_get_stix_bundle,
+            'submit_bundle_to_taxii': self._handle_submit_bundle_to_taxii,
         }
         action_result = self.add_action_result(ActionResult(dict(param)))
         if action_id not in actions:
@@ -254,6 +258,16 @@ class CTISConnector(BaseConnector):
         if not was_success:
             raise RuntimeError(f"Failed to update container: {message}")
         return resp
+
+    def get_container_bundle(self, bundle_id: str) -> Tuple[int, STIXBundleContainer]:
+        container_id, container = self.get_container_by_tag(bundle_id)
+        return container_id, STIXBundleContainer.from_dict(container["data"])
+
+    def update_container_bundle(self, bundle_id: str, bundle: STIXBundleContainer) -> dict:
+        container_id, container = self.get_container_by_tag(bundle_id)
+        self.save_progress(f"Updating bundle in container_id={container_id}")
+        self.update_container_data(container_id, bundle.to_dict())
+        return container
 
     def get_container_by_id(self, container_id: int) -> dict:
         endpoint = urljoin(REST_BASE_URL, f"container/{container_id}")

@@ -23,10 +23,12 @@ class STIXBundleContainer:
 
     def to_canonical_bundle_dict(self) -> dict:
         # Convert to STIX compliant bundle object
+        # TODO: Add TLP marking definitions
         objects = self.indicators + self.identities
         bundle = Bundle(objects=objects, id=self.bundle_id)
         as_dict = json.loads(bundle.serialize())
         return as_dict
+
 
 
 if __name__ == '__main__':

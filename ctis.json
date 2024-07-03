@@ -10,7 +10,7 @@
   ],
   "type": "threat intel",
   "main_module": "ctis_connector.py",
-  "app_version": "0.0.40",
+  "app_version": "0.0.43",
   "utctime_updated": "2024-06-27T01:54:55Z",
   "package_name": "ctis-taxii",
   "product_name": "TAXII v2.1 Client / CTIS",
@@ -235,6 +235,38 @@
         }
       },
       "output": [],
+      "versions": "EQ(*)"
+    },
+    {
+      "action": "submit bundle to taxii server",
+      "description": "Submit STIX bundle to TAXII server",
+      "type": "generic",
+      "identifier": "submit_bundle_to_taxii_server",
+      "read_only": false,
+      "parameters": {
+        "bundle_id": {
+          "order": 0,
+          "required": true,
+          "description": "Bundle ID which refers to the SOAR container tagged with this ID",
+          "data_type": "string"
+        },
+        "collection_id": {
+          "order": 1,
+          "required": true,
+          "description": "Collection ID to write the bundle to",
+          "data_type": "string"
+        }
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.response.id",
+          "data_type": "string"
+        },
+        {
+          "data_path": "action_result.data.*.response.status",
+          "data_type": "string"
+        }
+      ],
       "versions": "EQ(*)"
     },
     {
