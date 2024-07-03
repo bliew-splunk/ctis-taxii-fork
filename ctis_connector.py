@@ -22,6 +22,7 @@ from stix_bundle import STIXBundle
 import cef_to_stix
 from taxii_client import TAXIIClient
 from tlp_marking import generate_tlp_marking_definitions
+from typing import Tuple
 
 assert REST_BASE_URL.endswith("/")
 
@@ -151,23 +152,23 @@ class CTISConnector(BaseConnector):
         action_result.add_data({"json": json.dumps(result)})
         return action_result.set_status(phantom.APP_SUCCESS)
 
-    def _handle_generate_identity_stix_json(self, action_result, param):
+    def _handle_add_identity_to_stix_bundle_container(self, action_result, param):
         self.save_progress(f"Generating Identity STIX JSON with param={param}")
-        identity_id = param['id']
-        identity_name = param['name']
+        bundle_id = param['bundle_id']
+        identity_id = param['identity_id']
+        identity_name = param['identity_name']
         identity_class = param['identity_class']
         identity_obj = Identity(id=identity_id, name=identity_name, identity_class=identity_class)
-        action_result.add_data({"json": identity_obj.serialize()})
+        # TODO: refactor this pattern of getting container by tag & updating it
+        container_id, container = self.get_container_by_tag(bundle_id)
+        bundle: STIXBundle = STIXBundle.from_dict(container["data"])
+        bundle.add_identity(identity=identity_obj)
+        self.update_container_data(container_id, bundle.to_dict())
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_create_stix_bundle_container(self, action_result, param):
         self.save_progress(f"Generating Identity STIX JSON with param={param}")
-        identity_id = param['identity_id']
-        identity_name = param['identity_name']
-        identity_class = param['identity_class']
-        identity_obj = json.loads(
-            Identity(id=identity_id, name=identity_name, identity_class=identity_class).serialize())
-        bundle = STIXBundle(identity=identity_obj)
+        bundle = STIXBundle()
         container = {
             "name": f"STIX bundle {bundle.bundle_id}",
             "label": "ctis-bundle",
@@ -214,7 +215,7 @@ class CTISConnector(BaseConnector):
             'add_soar_indicator_to_stix_bundle': self._handle_add_indicator_to_stix_bundle,
             'add_tlp_marking_definitions': self._handle_add_tlp_marking_definitions,
             'on_poll': self._handle_on_poll,
-            'generate_identity_stix_json': self._handle_generate_identity_stix_json,
+            'add_identity_to_stix_bundle_container': self._handle_add_identity_to_stix_bundle_container,
             'create_stix_bundle_container': self._handle_create_stix_bundle_container,
             'get_stix_bundle': self._handle_get_stix_bundle,
         }
@@ -276,7 +277,7 @@ class CTISConnector(BaseConnector):
             raise ValueError(f"Multiple containers with tag {tag} found")
         return data[0]["id"]
 
-    def get_container_by_tag(self, tag: str) -> (int, dict):
+    def get_container_by_tag(self, tag: str) -> Tuple[int, dict]:
         container_id = self.get_container_id_for_tag(tag)
         return container_id, self.get_container_by_id(container_id)
 

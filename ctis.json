@@ -10,7 +10,7 @@
   ],
   "type": "threat intel",
   "main_module": "ctis_connector.py",
-  "app_version": "0.0.36",
+  "app_version": "0.0.38",
   "utctime_updated": "2024-06-27T01:54:55Z",
   "package_name": "ctis-taxii",
   "product_name": "TAXII v2.1 Client / CTIS",
@@ -74,7 +74,7 @@
       "versions": "EQ(*)"
     },
     {
-      "action": "add soar indicator to stix bundle",
+      "action": "add soar indicator to stix bundle container",
       "description": "For a SOAR indicator, convert related artifacts CEF data to a STIX Indicator and add this to existing STIX bundle",
       "type": "generic",
       "identifier": "add_soar_indicator_to_stix_bundle",
@@ -144,7 +144,7 @@
       "versions": "EQ(*)"
     },
     {
-      "action": "get stix bundle",
+      "action": "get stix bundle container json",
       "description": "Get STIX bundle JSON by bundle ID",
       "type": "generic",
       "identifier": "get_stix_bundle",
@@ -166,33 +166,12 @@
       "versions": "EQ(*)"
     },
     {
-      "action": "create stix bundle",
+      "action": "create stix bundle container",
       "description": "Create empty STIX bundle container",
       "type": "generic",
       "identifier": "create_stix_bundle_container",
       "read_only": false,
-      "parameters": {
-        "identity_id": {
-          "order": 0,
-          "required": true,
-          "description": "Identity ID",
-          "data_type": "string"
-        },
-        "identity_class": {
-          "order": 1,
-          "required": true,
-          "default": "organization",
-          "description": "Identity Class",
-          "data_type": "string"
-        },
-        "identity_name": {
-          "order": 2,
-          "required": true,
-          "default": "CTIS",
-          "description": "Name",
-          "data_type": "string"
-        }
-      },
+      "parameters": {},
       "output": [
         {
           "data_path": "action_result.data.*.container_id",
@@ -206,61 +185,40 @@
       "versions": "EQ(*)"
     },
     {
-      "action": "generate identity stix json",
-      "description": "Generate Identity STIX json object",
+      "action": "add identity to stix bundle container",
+      "description": "Add an identity to a STIX bundle container",
       "type": "generic",
-      "identifier": "generate_identity_stix_json",
-      "read_only": true,
+      "identifier": "add_identity_to_stix_bundle_container",
+      "read_only": false,
       "parameters": {
-        "id": {
+        "bundle_id": {
           "order": 0,
+          "required": true,
+          "description": "Bundle ID",
+          "data_type": "string"
+        },
+        "identity_id": {
+          "order": 1,
           "required": true,
           "description": "Identity ID",
           "data_type": "string"
         },
         "identity_class": {
-          "order": 1,
+          "order": 2,
           "required": true,
           "default": "organization",
           "description": "Identity Class",
           "data_type": "string"
         },
-        "name": {
-          "order": 2,
+        "identity_name": {
+          "order": 3,
           "required": true,
           "default": "CTIS",
           "description": "Name",
           "data_type": "string"
         }
       },
-      "output": [
-        {
-          "data_path": "action_result.data.*.json",
-          "data_type": "string"
-        }
-      ],
-      "versions": "EQ(*)"
-    },
-    {
-      "action": "add tlp marking definitions",
-      "description": "For the given array of objects, append the required TLP marking definitions",
-      "type": "generic",
-      "identifier": "add_tlp_marking_definitions",
-      "read_only": false,
-      "parameters": {
-        "objects": {
-          "order": 0,
-          "required": true,
-          "description": "JSON encoded Array of STIX 2.1 Objects",
-          "data_type": "string"
-        }
-      },
-      "output": [
-        {
-          "data_path": "action_result.data.*.json",
-          "data_type": "string"
-        }
-      ],
+      "output": [],
       "versions": "EQ(*)"
     },
     {
