@@ -12,7 +12,7 @@ def new_bundle_id() -> str:
 
 @dataclass_json
 @dataclass
-class STIXBundle:
+class STIXBundleContainer:
     bundle_id: str = field(default_factory=new_bundle_id)
     indicators: List[Dict] = field(default_factory=list)
     identities: List[Dict] = field(default_factory=list)
@@ -21,10 +21,17 @@ class STIXBundle:
         identity_dict = json.loads(identity.serialize())
         self.identities.append(identity_dict)
 
+    def to_canonical_bundle_dict(self) -> dict:
+        # Convert to STIX compliant bundle object
+        objects = self.indicators + self.identities
+        bundle = Bundle(objects=objects, id=self.bundle_id)
+        as_dict = json.loads(bundle.serialize())
+        return as_dict
+
 
 if __name__ == '__main__':
-    bundle_with_id_arg = STIXBundle.from_dict({"bundle_id": "abc123"})
+    bundle_with_id_arg = STIXBundleContainer.from_dict({"bundle_id": "abc123"})
     print(bundle_with_id_arg)
 
-    bundle_from_empty = STIXBundle.from_dict({})
+    bundle_from_empty = STIXBundleContainer.from_dict({})
     print(bundle_from_empty)

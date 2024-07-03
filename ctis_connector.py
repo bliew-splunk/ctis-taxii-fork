@@ -18,7 +18,7 @@ from phantom.base_connector import BaseConnector, REST_BASE_URL
 from phantom.utils import config as phconfig
 
 from stix2 import Identity
-from stix_bundle import STIXBundle
+from stix_bundle import STIXBundleContainer
 import cef_to_stix
 from taxii_client import TAXIIClient
 from tlp_marking import generate_tlp_marking_definitions
@@ -113,7 +113,7 @@ class CTISConnector(BaseConnector):
         optional_params_dict = {k: param[k] for k in optional_params if k in param}
 
         container_id, container = self.get_container_by_tag(bundle_id)
-        bundle: STIXBundle = STIXBundle.from_dict(container["data"])
+        bundle: STIXBundleContainer = STIXBundleContainer.from_dict(container["data"])
         self.save_progress(f"Loaded Bundle: {bundle}")
 
         self.save_progress(f"Generating STIX JSON for {param}")
@@ -161,14 +161,14 @@ class CTISConnector(BaseConnector):
         identity_obj = Identity(id=identity_id, name=identity_name, identity_class=identity_class)
         # TODO: refactor this pattern of getting container by tag & updating it
         container_id, container = self.get_container_by_tag(bundle_id)
-        bundle: STIXBundle = STIXBundle.from_dict(container["data"])
+        bundle: STIXBundleContainer = STIXBundleContainer.from_dict(container["data"])
         bundle.add_identity(identity=identity_obj)
         self.update_container_data(container_id, bundle.to_dict())
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_create_stix_bundle_container(self, action_result, param):
         self.save_progress(f"Generating Identity STIX JSON with param={param}")
-        bundle = STIXBundle()
+        bundle = STIXBundleContainer()
         container = {
             "name": f"STIX bundle {bundle.bundle_id}",
             "label": "ctis-bundle",
@@ -193,9 +193,11 @@ class CTISConnector(BaseConnector):
         bundle_id = param['bundle_id']
         self.save_progress(f"Getting STIX Bundle with ID: {bundle_id}")
         _, container = self.get_container_by_tag(bundle_id)
-        bundle_data = container["data"]
-        # TODO: perform transformation into envelope format
-        action_result.add_data({"json": json.dumps(bundle_data)})
+        bundle: STIXBundleContainer = STIXBundleContainer.from_dict(container["data"])
+        self.save_progress(f"Loaded Bundle container: {bundle}")
+        bundle_dict = bundle.to_canonical_bundle_dict()
+        self.save_progress(f"Converted to STIX Bundle: {bundle_dict}")
+        action_result.add_data(bundle_dict)
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_on_poll(self, action_result, param):
