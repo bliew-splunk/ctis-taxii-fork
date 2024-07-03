@@ -10,7 +10,7 @@
   ],
   "type": "threat intel",
   "main_module": "ctis_connector.py",
-  "app_version": "0.0.30",
+  "app_version": "0.0.35",
   "utctime_updated": "2024-06-27T01:54:55Z",
   "package_name": "ctis-taxii",
   "product_name": "TAXII v2.1 Client / CTIS",
@@ -74,20 +74,26 @@
       "versions": "EQ(*)"
     },
     {
-      "action": "generate indicator stix json",
-      "description": "Given a SOAR indicator ID, generate a STIX 2.1 Indicator JSON object",
+      "action": "add soar indicator to stix bundle",
+      "description": "For a SOAR indicator, convert related artifacts CEF data to a STIX Indicator and add this to existing STIX bundle",
       "type": "generic",
-      "identifier": "generate_indicator_stix_json",
-      "read_only": true,
+      "identifier": "add_soar_indicator_to_stix_bundle",
+      "read_only": false,
       "parameters": {
-        "indicator_id": {
+        "bundle_id": {
           "order": 0,
+          "required": true,
+          "description": "STIX Bundle ID",
+          "data_type": "string"
+        },
+        "indicator_id": {
+          "order": 1,
           "required": true,
           "description": "SOAR Indicator ID",
           "data_type": "string"
         },
         "tlp_rating": {
-          "order": 1,
+          "order": 2,
           "required": true,
           "default": null,
           "description": "Traffic Light Protocol (TLP) Rating",
@@ -100,25 +106,25 @@
           ]
         },
         "created_by_ref": {
-          "order": 2,
+          "order": 3,
           "required": true,
           "description": "The Identity ID of the creator of the Indicator",
           "data_type": "string"
         },
         "description": {
-          "order": 3,
+          "order": 4,
           "required": false,
           "description": "Description of the Indicator",
           "data_type": "string"
         },
         "confidence": {
-          "order": 4,
+          "order": 5,
           "required": false,
           "description": "Confidence value (0-100)",
           "data_type": "numeric"
         },
         "lang": {
-          "order": 5,
+          "order": 6,
           "required": false,
           "default": "en",
           "description": "Description of the Indicator",

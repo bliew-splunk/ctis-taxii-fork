@@ -18,6 +18,7 @@ from phantom.base_connector import BaseConnector, REST_BASE_URL
 from phantom.utils import config as phconfig
 
 from stix2 import Identity
+from stix_bundle import STIXBundle
 import cef_to_stix
 from taxii_client import TAXIIClient
 from tlp_marking import generate_tlp_marking_definitions
@@ -98,14 +99,19 @@ class CTISConnector(BaseConnector):
 
     # TODO: Consider another action which doesn't rely on an existing Indicator
     #   so user can give any cef_field_names and cef_value
-    def _handle_generate_indicator_stix_json(self, action_result, param):
+    def _handle_add_indicator_to_stix_bundle(self, action_result, param):
         # Required params
+        bundle_id = param['bundle_id']
         indicator_id = param['indicator_id']
         tlp_rating = param['tlp_rating']
         identity_id = param['created_by_ref']
 
         optional_params = ('description', 'lang', 'confidence')
         optional_params_dict = {k: param[k] for k in optional_params if k in param}
+
+        container_id, container = self.get_container_by_tag(bundle_id)
+        bundle: STIXBundle = STIXBundle.from_dict(container["data"])
+        self.save_progress(f"Loaded Bundle: {bundle}")
 
         self.save_progress(f"Generating STIX JSON for {param}")
         indicator = self.get_indicator(indicator_id=indicator_id)
@@ -127,6 +133,10 @@ class CTISConnector(BaseConnector):
             "stix_id": stix_dict["id"],
             "json": json.dumps(stix_dict)
         })
+
+        bundle.indicators.append(stix_dict)
+        self.save_progress(f"Updating bundle with container_id={container_id}: {bundle}")
+        self.update_container_data(container_id, bundle.to_dict())
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_add_tlp_marking_definitions(self, action_result, param):
@@ -184,7 +194,7 @@ class CTISConnector(BaseConnector):
     def _handle_get_stix_bundle(self, action_result, param):
         bundle_id = param['bundle_id']
         self.save_progress(f"Getting STIX Bundle with ID: {bundle_id}")
-        container = self.get_container_by_tag(bundle_id)
+        _, container = self.get_container_by_tag(bundle_id)
         bundle_data = container["data"]
         # TODO: perform transformation into envelope format
         action_result.add_data({"json": json.dumps(bundle_data)})
@@ -204,7 +214,7 @@ class CTISConnector(BaseConnector):
         actions = {
             'test_connectivity': self._handle_test_connectivity,
             'add_objects_to_collection': self._handle_add_objects_to_collection,
-            'generate_indicator_stix_json': self._handle_generate_indicator_stix_json,
+            'add_soar_indicator_to_stix_bundle': self._handle_add_indicator_to_stix_bundle,
             'add_tlp_marking_definitions': self._handle_add_tlp_marking_definitions,
             'on_poll': self._handle_on_poll,
             'generate_identity_stix_json': self._handle_generate_identity_stix_json,
@@ -235,6 +245,16 @@ class CTISConnector(BaseConnector):
         assert type(resp_json) == dict
         return resp_json
 
+    def update_container_data(self, container_id: int, data: dict) -> dict:
+        self.save_progress(f"Updating container_id={container_id}")
+        payload = [
+            {"id": container_id, "data": data}
+        ]
+        was_success, message, resp = self.save_containers(payload)
+        if not was_success:
+            raise RuntimeError(f"Failed to update container: {message}")
+        return resp
+
     def get_container_by_id(self, container_id: int) -> dict:
         endpoint = urljoin(REST_BASE_URL, f"container/{container_id}")
         self.save_progress(f"Getting container: {container_id} from {endpoint}")
@@ -242,7 +262,8 @@ class CTISConnector(BaseConnector):
         response.raise_for_status()
         return response.json()
 
-    def get_container_by_tag(self, tag: str) -> dict:
+    def get_container_id_for_tag(self, tag: str) -> int:
+        # TODO: can add more filters, e.g. on label
         # GET /rest/container?_filter_tags__contains=%22bundle--5cb46801-3ff2-4c11-96c2-450b907dcd95%22
         endpoint = urljoin(REST_BASE_URL, f"container")
         tag = f'"{tag}"'  # enclose in double quotes
@@ -256,8 +277,11 @@ class CTISConnector(BaseConnector):
             raise LookupError(f"Container with tag {tag} not found")
         if len(data) > 1:
             raise ValueError(f"Multiple containers with tag {tag} found")
-        container_id = data[0]["id"]
-        return self.get_container_by_id(container_id)
+        return data[0]["id"]
+
+    def get_container_by_tag(self, tag: str) -> (int, dict):
+        container_id = self.get_container_id_for_tag(tag)
+        return container_id, self.get_container_by_id(container_id)
 
     def get_artifact(self, container_id, artifact_id) -> dict:
         endpoint = urljoin(REST_BASE_URL, f"container/{container_id}/artifacts")
