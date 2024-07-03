@@ -51,16 +51,15 @@ class TAXIIClient:
         as_dict = json.loads(bundle.serialize())
         return as_dict
 
-    def submit_bundle_to_collection(self, collection_id: str, bundle: dict):
-        self.log(f"POSTing bundle={bundle} to collection {collection_id}.")
-        resp = self.get_collection(collection_id).add_objects(bundle)
-        self.log(f"Response: {resp} -> {vars(resp)}")
-        return resp._raw
-
-    def add_objects_to_collection(self, collection_id: str, objects: list, bundle_id: str = None):
+    def add_objects_to_collection(self, collection_id: str, objects: list):
         assert type(objects) == list
-        envelope = self.create_bundle_envelope(objects=objects, bundle_id=bundle_id)
-        return self.submit_bundle_to_collection(collection_id=collection_id, bundle=envelope)
+        envelope = {
+            "objects": objects
+        }
+        self.log(f"POSTing envelope={envelope} to collection {collection_id}.")
+        response = self.get_collection(collection_id).add_objects(envelope=envelope)
+        self.log(f"Response: {response} -> {vars(response)}")
+        return response._raw
 
     def list_collections(self) -> list:
         return self.api_root.collections

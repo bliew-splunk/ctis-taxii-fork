@@ -76,18 +76,12 @@ class CTISConnector(BaseConnector):
     def _handle_submit_bundle_to_taxii(self, action_result, param):
         collection_id = param['collection_id']
         bundle_id = param['bundle_id']
-        pass
-
-    def _handle_add_objects_to_collection(self, action_result, param):
-        collection_id = param['collection_id']
-        bundle_id = param.get('bundle_id')
-        objects_list = self.deserialize_objects_param(param=param)
-        self.save_progress(f"Adding objects to collection param={param}")
-        resp = self.client.add_objects_to_collection(collection_id, objects_list, bundle_id=bundle_id)
+        self.save_progress(f"Submitting bundle_id={bundle_id} to collection_id={collection_id}")
+        _, bundle = self.get_container_bundle(bundle_id=bundle_id)
+        canonical_bundle = bundle.to_canonical_bundle_dict()
+        resp = self.client.add_objects_to_collection(collection_id, objects=[canonical_bundle])
         self.save_progress(f"Response: {resp}")
-
         action_result.add_data({"response": resp})
-        # self.write_to_container(data={"objects": objects_list})
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def write_to_container(self, data: dict):
@@ -111,7 +105,6 @@ class CTISConnector(BaseConnector):
         indicator_id = param['indicator_id']
         tlp_rating = param['tlp_rating']
 
-        # TODO: make this optional, and use bundle identity if not provided
         identity_id = param['created_by_ref']
 
         optional_params = ('description', 'lang', 'confidence')
@@ -137,7 +130,6 @@ class CTISConnector(BaseConnector):
                                                      created_by_ref=identity_id, **optional_params_dict)
         self.save_progress(f"STIX JSON: {stix_dict}")
         action_result.add_data({
-            # TODO: test output STIX ID from action
             "stix_id": stix_dict["id"],
             "json": json.dumps(stix_dict)
         })
@@ -148,6 +140,7 @@ class CTISConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_add_tlp_marking_definitions(self, action_result, param):
+        # TODO: Remove this (no longer exposed as action)
         self.save_progress(f"{self._handle_add_tlp_marking_definitions.__name__}: param={param}")
         objects_list = self.deserialize_objects_param(param=param)
         tlp_objects = generate_tlp_marking_definitions(objects=objects_list)
@@ -164,7 +157,6 @@ class CTISConnector(BaseConnector):
         identity_name = param['identity_name']
         identity_class = param['identity_class']
         identity_obj = Identity(id=identity_id, name=identity_name, identity_class=identity_class)
-        # TODO: refactor this pattern of getting container by tag & updating it
         container_id, bundle = self.get_container_bundle(bundle_id=bundle_id)
         bundle.add_identity(identity=identity_obj)
         self.update_container_data(container_id, bundle.to_dict())
@@ -216,14 +208,12 @@ class CTISConnector(BaseConnector):
 
         actions = {
             'test_connectivity': self._handle_test_connectivity,
-            'add_objects_to_collection': self._handle_add_objects_to_collection,
             'add_soar_indicator_to_stix_bundle': self._handle_add_indicator_to_stix_bundle,
-            'add_tlp_marking_definitions': self._handle_add_tlp_marking_definitions,
             'on_poll': self._handle_on_poll,
             'add_identity_to_stix_bundle_container': self._handle_add_identity_to_stix_bundle_container,
             'create_stix_bundle_container': self._handle_create_stix_bundle_container,
             'get_stix_bundle': self._handle_get_stix_bundle,
-            'submit_bundle_to_taxii': self._handle_submit_bundle_to_taxii,
+            'submit_bundle_to_taxii_server': self._handle_submit_bundle_to_taxii,
         }
         action_result = self.add_action_result(ActionResult(dict(param)))
         if action_id not in actions:
