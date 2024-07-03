@@ -104,6 +104,8 @@ class CTISConnector(BaseConnector):
         bundle_id = param['bundle_id']
         indicator_id = param['indicator_id']
         tlp_rating = param['tlp_rating']
+
+        # TODO: make this optional, and use bundle identity if not provided
         identity_id = param['created_by_ref']
 
         optional_params = ('description', 'lang', 'confidence')
@@ -165,19 +167,14 @@ class CTISConnector(BaseConnector):
         identity_class = param['identity_class']
         identity_obj = json.loads(
             Identity(id=identity_id, name=identity_name, identity_class=identity_class).serialize())
-        bundle = self.client.create_bundle_envelope(objects=[])
-        bundle_id = bundle["id"]
-        container_data = {
-            "bundle_id": bundle_id,
-            "identity": identity_obj
-        }
+        bundle = STIXBundle(identity=identity_obj)
         container = {
-            "name": f"STIX bundle {bundle_id}",
+            "name": f"STIX bundle {bundle.bundle_id}",
             "label": "ctis-bundle",
-            "tags": [bundle_id],
+            "tags": [bundle.bundle_id],
             "ingest_app_id": self.get_app_id(),
             "asset_id": self.get_asset_id(),
-            "data": container_data,
+            "data": bundle.to_dict(),
             "severity": "low",
         }
         self.save_progress(f"Writing container: {container}")
@@ -187,7 +184,7 @@ class CTISConnector(BaseConnector):
 
         action_result.add_data({
             "container_id": container_id,
-            "bundle_id": bundle_id
+            "bundle_id": bundle.bundle_id,
         })
         return action_result.set_status(phantom.APP_SUCCESS)
 
