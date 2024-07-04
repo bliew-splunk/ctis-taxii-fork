@@ -9,6 +9,7 @@ from cef_to_stix.hostname import SourceHostnameConverter, DestinationHostnameCon
 from cef_to_stix.ip_address import DestinationIPv4Converter, SourceIPv4Converter, IPv4Converter
 from cef_to_stix.abstract_cef_converter import AbstractCEFConverter
 from cef_to_stix.url import URLConverter
+from cef_to_stix.file_hashes import HashMD5Converter, HashSHA1Converter, HashSHA256Converter, HashSHA512Converter
 
 # See result from /rest/cef?page_size=1000
 #
@@ -97,7 +98,15 @@ MAP_OF_CEF_FIELD_TO_STIX_CONVERTER = {
     "dhost": DestinationHostnameConverter,
     "destinationHostName": DestinationHostnameConverter,
     "url": URLConverter,
-    "requestURL": URLConverter
+    "requestURL": URLConverter,
+    "md5": HashMD5Converter,
+    "fileHashMd5": HashMD5Converter,
+    "sha1": HashSHA1Converter,
+    "fileHashSha1": HashSHA1Converter,
+    "sha256": HashSHA256Converter,
+    "fileHashSha256": HashSHA256Converter,
+    "sha512": HashSHA512Converter,
+    "fileHashSha512": HashSHA512Converter
 }
 
 

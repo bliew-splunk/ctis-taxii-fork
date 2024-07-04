@@ -63,6 +63,32 @@ class TestIndividualCEFFieldToSTIXPattern:
             convert_cef_to_stix_observation_pattern(cef_field, 'https://www.abc.com'),
             "[url:value = 'https://www.abc.com']")
 
+    @pytest.mark.parametrize("cef_field", ("md5", "fileHashMd5"))
+    def test_hash_md5(self, cef_field):
+        compare_stix_pattern_to_string(
+            convert_cef_to_stix_observation_pattern(cef_field, 'cead3f77f6cda6ec00f57d76c9a6879f'),
+            "[file:hashes.MD5 = 'cead3f77f6cda6ec00f57d76c9a6879f']")
+
+    @pytest.mark.parametrize("cef_field", ("sha1", "fileHashSha1"))
+    def test_hash_sha1(self, cef_field):
+        compare_stix_pattern_to_string(
+            convert_cef_to_stix_observation_pattern(cef_field, '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12'),
+            "[file:hashes.'SHA-1' = '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12']")
+
+    @pytest.mark.parametrize("cef_field", ("sha256", "fileHashSha256"))
+    def test_hash_sha256(self, cef_field):
+        compare_stix_pattern_to_string(
+            convert_cef_to_stix_observation_pattern(cef_field,
+                                                    'aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f'),
+            "[file:hashes.'SHA-256' = 'aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f']")
+
+    @pytest.mark.parametrize("cef_field", ("sha512", "fileHashSha512"))
+    def test_hash_sha512(self, cef_field):
+        hash_digest = '9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca72323c3d99ba5c11d7c7acc6e14b8c5da0c4663475c2e5c3adef46f73bcdec043'
+        compare_stix_pattern_to_string(
+            convert_cef_to_stix_observation_pattern(cef_field, hash_digest),
+            f"[file:hashes.'SHA-512' = '{hash_digest}']")
+
 
 class TestMultipleCEFFieldToSTIXPattern:
     def test_destination_and_source_ipv4(self):
