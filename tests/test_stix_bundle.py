@@ -1,5 +1,5 @@
 from stix_bundle import STIXBundleContainer
-from stix2 import Identity
+from stix2 import Identity, Indicator, TLP_RED
 
 
 class TestSTIXBundle:
@@ -12,7 +12,8 @@ class TestSTIXBundle:
     def test_load_from_json_2(self):
         indicators = [{"type": "indicator"}]
         identities = [{"type": "identity"}]
-        bundle = STIXBundleContainer.from_dict({"bundle_id": "abc123", "indicators": indicators, "identities": identities})
+        bundle = STIXBundleContainer.from_dict(
+            {"bundle_id": "abc123", "indicators": indicators, "identities": identities})
         assert bundle.bundle_id == "abc123"
         assert bundle.indicators == indicators
         assert bundle.identities == identities
@@ -31,10 +32,15 @@ class TestSTIXBundle:
         bundle = STIXBundleContainer()
         identity = Identity(name="test")
         bundle.add_identity(identity)
+        indicator = Indicator(pattern="[url:value = 'https://www.example.com']", pattern_type="stix",
+                              object_marking_refs=TLP_RED)
+        bundle.indicators.append(indicator)
         as_dict = bundle.to_canonical_bundle_dict()
         assert as_dict["type"] == "bundle"
         assert as_dict["id"] == bundle.bundle_id
-        assert len(as_dict["objects"]) == 1
-        assert as_dict["objects"][0]["name"] == "test"
-        assert as_dict["objects"][0]["type"] == "identity"
-        assert as_dict["objects"][0]["id"].startswith("identity--")
+        assert len(as_dict["objects"]) == 3
+
+        object_ids = set([x["id"] for x in as_dict["objects"]])
+        assert "marking-definition--5e57c739-391a-4eb3-b6be-7d15ca92d5ed" in object_ids
+        assert indicator.id in object_ids
+        assert identity.id in object_ids

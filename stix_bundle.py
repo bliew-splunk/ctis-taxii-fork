@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from typing import List, Dict
 from stix2 import Bundle, Identity
+from tlp_marking import generate_tlp_marking_definitions
 
 
 def new_bundle_id() -> str:
@@ -24,11 +25,11 @@ class STIXBundleContainer:
     def to_canonical_bundle_dict(self) -> dict:
         # Convert to STIX compliant bundle object
         # TODO: Add TLP marking definitions
-        objects = self.indicators + self.identities
+        tlp_marking_definitions = generate_tlp_marking_definitions(self.indicators)
+        objects = self.indicators + self.identities + tlp_marking_definitions
         bundle = Bundle(objects=objects, id=self.bundle_id)
         as_dict = json.loads(bundle.serialize())
         return as_dict
-
 
 
 if __name__ == '__main__':
