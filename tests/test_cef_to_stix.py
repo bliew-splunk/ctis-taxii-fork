@@ -109,6 +109,18 @@ class TestIndividualCEFFieldToSTIXPattern:
             convert_cef_to_stix_observation_pattern(cef_field, hash_digest),
             f"[file:hashes.'SHA-512' = '{hash_digest}']")
 
+    @pytest.mark.parametrize("cef_field", ["file name", "fileName"])
+    def test_file_name(self, cef_field):
+        compare_stix_pattern_to_string(convert_cef_to_stix_observation_pattern(cef_field, "abc.exe"),
+                                       "[file:name = 'abc.exe']")
+
+    @pytest.mark.parametrize("cef_field", ["file path", "filePath"])
+    def test_file_path(self, cef_field):
+        fp = "C:\\Windows\\System32"
+        pattern = convert_cef_to_stix_observation_pattern(cef_field, fp)
+        pattern_str = str(pattern)
+        assert pattern_str == f"[file:parent_directory_ref.path = '{fp}']"
+
 
 class TestMultipleCEFFieldToSTIXPattern:
     def test_destination_and_source_ipv4(self):

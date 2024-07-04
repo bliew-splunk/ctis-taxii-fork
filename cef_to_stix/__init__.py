@@ -9,9 +9,10 @@ from cef_to_stix.hostname import SourceHostnameConverter, DestinationHostnameCon
 from cef_to_stix.ip_address import DestinationIPv4Converter, SourceIPv4Converter, IPv4Converter
 from cef_to_stix.abstract_cef_converter import AbstractCEFConverter
 from cef_to_stix.url import URLConverter
-from cef_to_stix.file_hashes import HashMD5Converter, HashSHA1Converter, HashSHA256Converter, HashSHA512Converter
+from cef_to_stix.hashes import HashMD5Converter, HashSHA1Converter, HashSHA256Converter, HashSHA512Converter
 from cef_to_stix.mac_address import MacAddressNoContextConverter, SourceMacAddressConverter, \
     DestinationMacAddressConverter
+from cef_to_stix.file_metadata import FileNameConverter, FilePathConverter
 
 # See result from /rest/cef?page_size=1000
 #
@@ -22,18 +23,23 @@ from cef_to_stix.mac_address import MacAddressNoContextConverter, SourceMacAddre
 # https://learn.microsoft.com/en-us/azure/sentinel/cef-name-mapping
 """
 TODO: Implement most common CEF fields
-- base data types:
-    ip, port, mac address, url, domain, hash, sha1, sha256, sha512, md5, file name, file path, host name, user name
-    process name
-- SRC & DEST for IPv4:
-    - IP
-    - Hostname
-    - Domain
-- filename
-- file hashes (MD5, SHA1, SHA256)
-- URL
-- Email
-
+- base SOAR CEF data types:
+    "domain"
+    "file name"
+    "file path"
+    "hash"
+    "host name"
+    "ip"
+    "mac address"
+    "md5"
+    "port"
+    "process name"
+    "sha1"
+    "sha256"
+    "sha512"
+    "url"
+    "user name"
+    "vault id"
 """
 TLP_RATING_TO_MARKING_DEFINITION = {
     "WHITE": TLP_WHITE,
@@ -101,6 +107,8 @@ MULTIKEY_MAP_OF_CEF_FIELD_TO_STIX_CONVERTER = {
     ("sha1", "fileHashSha1"): HashSHA1Converter,
     ("sha256", "fileHashSha256"): HashSHA256Converter,
     ("sha512", "fileHashSha512"): HashSHA512Converter,
+    ("file name", "fileName"): FileNameConverter,
+    ("file path", "filePath"): FilePathConverter,
 }
 MAP_OF_CEF_FIELD_TO_STIX_CONVERTER = {}
 for key, value in MULTIKEY_MAP_OF_CEF_FIELD_TO_STIX_CONVERTER.items():
