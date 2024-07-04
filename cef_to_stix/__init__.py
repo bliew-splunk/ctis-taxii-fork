@@ -10,6 +10,8 @@ from cef_to_stix.ip_address import DestinationIPv4Converter, SourceIPv4Converter
 from cef_to_stix.abstract_cef_converter import AbstractCEFConverter
 from cef_to_stix.url import URLConverter
 from cef_to_stix.file_hashes import HashMD5Converter, HashSHA1Converter, HashSHA256Converter, HashSHA512Converter
+from cef_to_stix.mac_address import MacAddressNoContextConverter, SourceMacAddressConverter, \
+    DestinationMacAddressConverter
 
 # See result from /rest/cef?page_size=1000
 #
@@ -91,6 +93,9 @@ MULTIKEY_MAP_OF_CEF_FIELD_TO_STIX_CONVERTER = {
     ("shost", "sourceHostName", "sourceDnsDomain", "sourceNtDomain", "sntdom"): SourceHostnameConverter,
     ("dhost", "destinationHostName", "destinationDnsDomain", "destinationNtDomain",
      "dntdom"): DestinationHostnameConverter,
+    ("mac address", "deviceMacAddress"): MacAddressNoContextConverter,
+    ("smac", "sourceMacAddress"): SourceMacAddressConverter,
+    ("dmac", "destinationMacAddress"): DestinationMacAddressConverter,
     ("url", "requestURL"): URLConverter,
     ("md5", "fileHashMd5"): HashMD5Converter,
     ("sha1", "fileHashSha1"): HashSHA1Converter,

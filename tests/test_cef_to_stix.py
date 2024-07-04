@@ -59,6 +59,24 @@ class TestIndividualCEFFieldToSTIXPattern:
             convert_cef_to_stix_observation_pattern(cef_field, 'example.com'),
             "[network-traffic:dst_ref.type = 'domain-name' AND network-traffic:dst_ref.value = 'example.com']")
 
+    @pytest.mark.parametrize("cef_field", ["mac address", "deviceMacAddress"])
+    def test_mac_address_with_no_context(self, cef_field):
+        compare_stix_pattern_to_string(
+            convert_cef_to_stix_observation_pattern(cef_field, 'd2:fb:49:24:37:18'),
+            "[mac-addr:value = 'd2:fb:49:24:37:18']")
+
+    @pytest.mark.parametrize("cef_field", ["sourceMacAddress", "smac"])
+    def test_source_mac_address(self, cef_field):
+        compare_stix_pattern_to_string(
+            convert_cef_to_stix_observation_pattern(cef_field, 'd2:fb:49:24:37:18'),
+            "[network-traffic:src_ref.type = 'mac-addr' AND network-traffic:src_ref.value = 'd2:fb:49:24:37:18']")
+
+    @pytest.mark.parametrize("cef_field", ["destinationMacAddress", "dmac"])
+    def test_destination_mac_address(self, cef_field):
+        compare_stix_pattern_to_string(
+            convert_cef_to_stix_observation_pattern(cef_field, 'd2:fb:49:24:37:18'),
+            "[network-traffic:dst_ref.type = 'mac-addr' AND network-traffic:dst_ref.value = 'd2:fb:49:24:37:18']")
+
     @pytest.mark.parametrize("cef_field", ("url", "requestURL"))
     def test_url(self, cef_field):
         compare_stix_pattern_to_string(
