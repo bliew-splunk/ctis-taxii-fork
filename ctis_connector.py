@@ -301,6 +301,17 @@ class CTISConnector(BaseConnector):
             raise ValueError(f"Multiple containers with tag {tag} found")
         return data[0]["id"]
 
+    # TODO: test this
+    def add_tag_to_container(self, container_id: int, tag: str):
+        container = self.get_container_by_id(container_id)
+        existing_tags = container.get("tags", [])
+        updated_tags = existing_tags + [tag]
+        self.save_progress(f"Adding tag: {tag} to container_id={container_id}")
+        endpoint = urljoin(REST_BASE_URL, f"container/{container_id}")
+        response = requests.post(endpoint, json={"tags": updated_tags}, verify=phconfig.platform_strict_tls)
+        response.raise_for_status()
+        return response.json()
+
     def get_container_by_tag(self, tag: str) -> Tuple[int, dict]:
         container_id = self.get_container_id_for_tag(tag)
         return container_id, self.get_container_by_id(container_id)
