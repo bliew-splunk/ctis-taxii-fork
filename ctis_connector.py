@@ -15,6 +15,7 @@ import phantom.app as phantom
 import requests
 from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector, REST_BASE_URL
+from phantom.vault import Vault
 from phantom.utils import config as phconfig
 
 from stix2 import Identity
@@ -162,6 +163,20 @@ class CTISConnector(BaseConnector):
         self.update_container_data(container_id, bundle.to_dict())
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    # TODO: attach revision of bundle STIX JSON to the container upon CUD operations
+    def add_file_attachment_to_container(self, container_id: int, file_bytes: bytes, file_name: str):
+        self.save_progress(f"Adding file attachment of file_name={file_name} to container_id={container_id}")
+        attach_resp = Vault.create_attachment(
+            file_contents=file_bytes,
+            container_id=container_id,
+            file_name=file_name,
+        )
+        self.save_progress(f"Attachment response: {attach_resp}")
+        failed = attach_resp.get("failed")
+        message = attach_resp.get("message")
+        if failed:
+            raise RuntimeError(f"Failed to attach file: {message}")
+
     def _handle_create_stix_bundle_container(self, action_result, param):
         self.save_progress(f"Generating Identity STIX JSON with param={param}")
         self.try_to_create_label(label='ctis-bundle')  # TODO: make this user configurable
@@ -184,6 +199,8 @@ class CTISConnector(BaseConnector):
             "container_id": container_id,
             "bundle_id": bundle.bundle_id,
         })
+        # self.add_file_attachment_to_container(container_id, file_bytes=bundle.to_json().encode(),
+        #                                       file_name="bundle.json")
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_stix_bundle(self, action_result, param):
