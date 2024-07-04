@@ -83,31 +83,27 @@ def convert_cef_to_stix_observation_pattern(cef_field_name_or_list: Union[str, L
         return convert_multiple_cef_fields_to_stix_observation_pattern(cef_field_name_or_list, cef_field_value)
 
 
-MAP_OF_CEF_FIELD_TO_STIX_CONVERTER = {
+MULTIKEY_MAP_OF_CEF_FIELD_TO_STIX_CONVERTER = {
     "ip": IPv4Converter,
-    "destinationAddress": DestinationIPv4Converter,
-    "destinationTranslatedAddress": DestinationIPv4Converter,
-    "sourceAddress": SourceIPv4Converter,
-    "sourceTranslatedAddress": SourceIPv4Converter,
-    "hostname": HostnameConverter,
-    "host name": HostnameConverter,
-    "dvchost": HostnameConverter,
-    "deviceHostname": HostnameConverter,
-    "shost": SourceHostnameConverter,
-    "sourceHostName": SourceHostnameConverter,
-    "dhost": DestinationHostnameConverter,
-    "destinationHostName": DestinationHostnameConverter,
-    "url": URLConverter,
-    "requestURL": URLConverter,
-    "md5": HashMD5Converter,
-    "fileHashMd5": HashMD5Converter,
-    "sha1": HashSHA1Converter,
-    "fileHashSha1": HashSHA1Converter,
-    "sha256": HashSHA256Converter,
-    "fileHashSha256": HashSHA256Converter,
-    "sha512": HashSHA512Converter,
-    "fileHashSha512": HashSHA512Converter
+    ("destinationAddress", "destinationTranslatedAddress"): DestinationIPv4Converter,
+    ("sourceAddress", "sourceTranslatedAddress"): SourceIPv4Converter,
+    ("hostname", "host name", "dvchost", "deviceHostname", "deviceDnsDomain", "domain"): HostnameConverter,
+    ("shost", "sourceHostName", "sourceDnsDomain", "sourceNtDomain", "sntdom"): SourceHostnameConverter,
+    ("dhost", "destinationHostName", "destinationDnsDomain", "destinationNtDomain",
+     "dntdom"): DestinationHostnameConverter,
+    ("url", "requestURL"): URLConverter,
+    ("md5", "fileHashMd5"): HashMD5Converter,
+    ("sha1", "fileHashSha1"): HashSHA1Converter,
+    ("sha256", "fileHashSha256"): HashSHA256Converter,
+    ("sha512", "fileHashSha512"): HashSHA512Converter,
 }
+MAP_OF_CEF_FIELD_TO_STIX_CONVERTER = {}
+for key, value in MULTIKEY_MAP_OF_CEF_FIELD_TO_STIX_CONVERTER.items():
+    if type(key) == str:
+        MAP_OF_CEF_FIELD_TO_STIX_CONVERTER[key] = value
+    else:
+        for k in key:
+            MAP_OF_CEF_FIELD_TO_STIX_CONVERTER[k] = value
 
 
 def get_stix_expression_for_cef_field(cef_field_name: str, cef_field_value: str) -> _PatternExpression:

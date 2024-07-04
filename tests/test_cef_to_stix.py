@@ -39,19 +39,21 @@ class TestIndividualCEFFieldToSTIXPattern:
             convert_cef_to_stix_observation_pattern(cef_field, '2.3.4.5'),
             "[network-traffic:src_ref.type = 'ipv4-addr' AND network-traffic:src_ref.value = '2.3.4.5']")
 
-    @pytest.mark.parametrize("cef_field", ["hostname", "host name", "dvchost", "deviceHostname"])
+    @pytest.mark.parametrize("cef_field",
+                             ["hostname", "host name", "dvchost", "deviceHostname", "domain", "deviceDnsDomain"])
     def test_hostname_with_no_context(self, cef_field):
         compare_stix_pattern_to_string(
             convert_cef_to_stix_observation_pattern(cef_field, 'example.com'),
             "[domain-name:value = 'example.com']")
 
-    @pytest.mark.parametrize("cef_field", ("shost", "sourceHostName"))
+    @pytest.mark.parametrize("cef_field", ("shost", "sourceHostName", "sourceDnsDomain", "sourceNtDomain", "sntdom"))
     def test_source_hostname(self, cef_field):
         compare_stix_pattern_to_string(
             convert_cef_to_stix_observation_pattern(cef_field, 'example.com'),
             "[network-traffic:src_ref.type = 'domain-name' AND network-traffic:src_ref.value = 'example.com']")
 
-    @pytest.mark.parametrize("cef_field", ("dhost", "destinationHostName"))
+    @pytest.mark.parametrize("cef_field",
+                             ("dhost", "destinationHostName", "destinationDnsDomain", "destinationNtDomain", "dntdom"))
     def test_destination_hostname(self, cef_field):
         compare_stix_pattern_to_string(
             convert_cef_to_stix_observation_pattern(cef_field, 'example.com'),
