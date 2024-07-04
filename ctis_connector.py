@@ -164,6 +164,7 @@ class CTISConnector(BaseConnector):
 
     def _handle_create_stix_bundle_container(self, action_result, param):
         self.save_progress(f"Generating Identity STIX JSON with param={param}")
+        self.try_to_create_label(label='ctis-bundle')  # TODO: make this user configurable
         bundle = STIXBundleContainer()
         container = {
             "name": f"STIX bundle {bundle.bundle_id}",
@@ -301,6 +302,19 @@ class CTISConnector(BaseConnector):
         assert "id" in only_artifact
         assert "cef" in only_artifact
         return only_artifact
+
+    # Returns success or failure
+    def try_to_create_label(self, label: str) -> bool:
+        endpoint = urljoin(REST_BASE_URL, f"system_settings/events")
+        self.save_progress(f"Creating label: {label} at {endpoint}")
+        response = requests.post(endpoint, json={"add_label": True, "label_name": label},
+                                 verify=phconfig.platform_strict_tls)
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            self.save_progress(f"Failed to create label: {e}")
+            return False
+        return True
 
     def initialize(self):
         # Load the state in initialize, use it to store data
